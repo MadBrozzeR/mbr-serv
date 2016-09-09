@@ -53,16 +53,16 @@ function setCookies(cookies, expires) {
 //   this.setCookies({[name]: value}, expires);
 // }
 
-function Request(request, response) {
+function Request(request, response, options) {
   const get = parseGet(request.url);
 
   this.data = '';
   this.request = request;
-  this.response = response;  
+  this.response = response;
   this.path = get.path;
   this.params = get.params;
   this.head = {code: 200, cookie: []};
-  this.encoding = 'utf8';
+  this.encoding = options.encoding || 'utf8';
   this.onData = null;
 
   request.on('data', (data) => {this.data += data});
@@ -98,10 +98,12 @@ function parseGet(url){
 	};
 }
 
-function fileAction() {
-  this.and = (callback) => {this.success = callback; return this;}
-  this.or = (callback) => {this.fail = callback; return this;}
-}
+function fileAction() {}
+
+fileAction.prototype = {
+  and: function(callback) {this.success = callback; return this;},
+  or: function(callback) {this.fail = callback; return this;}
+};
 
 function readFile(path, enc) {
   let actions = new fileAction();
@@ -143,7 +145,7 @@ const defaultTypeAction = {
 
 function onRequest(options) {
   return function(request, response) {
-    const req = new Request(request, response);
+    const req = new Request(request, response, options);
     if (options.script && options.script(req)) return true;
     (!req.path && options.defaultPage) && (req.path = options.defaultPage);
     const ext = getExtension(req.path);
@@ -153,7 +155,6 @@ function onRequest(options) {
       readFile(req.path, req.encoding)
         .and(function(data) {fileType.success ? fileType.success(req, data) : defaultTypeAction.success(req, data);})
         .or(function(error) {fileType.failure ? fileType.failure(req, error) : defaultTypeAction.failure(req, error);});
-      
     } else {
       req.head.code = 400;
       req.send();

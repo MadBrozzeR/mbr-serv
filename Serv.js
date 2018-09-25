@@ -1,11 +1,50 @@
 const http = require('http');
 const fs = require('fs');
-const config = require('./config_default.js');
+
+const empty = {}
+
+const defaultConfig = {
+  port: 80,
+  host: '0.0.0.0',
+  title: 'mbr-serv',
+  routes: {}
+};
+
+function getConfig () {
+  let config;
+  try {
+    config = JSON.parse(fs.readFileSync('./config.json'));
+  } catch (e) {
+    config = defaultConfig;
+    fs.writeFileSync('./config.json', JSON.stringify(defaultConfig, null, 2));
+  }
+  return config;
+}
+
+const config = getConfig();
 
 const port = config.port || 8080;
 const host = config.host || '0.0.0.0';
 
-const empty = {}
+/*
+// Attempt to implement proxy. Maybe one day...
+function getRoutes (routes) {
+  let mapper = {};
+  for (key in routes) {
+    try {
+      switch (routes[key].substr(0, 4)) {
+        case 'req:':
+          mapper[key] = require(routes[key].substr(4));
+          break;
+        case 'tcp:':
+          mapper[key] = function (request) {
+            http.
+          }
+      }
+    }
+  }
+}
+*/
 
 const templates = {
   reg: /\$\{(\w+)\}/g,
@@ -41,6 +80,7 @@ const CONST = {
   EMPTY: '',
   END: 'end',
   EQUATION: '=',
+  ERROR: 'error',
   QUESTION: '?',
   SET_COOKIE: 'Set-Cookie',
   SLASH: '/',
@@ -48,7 +88,9 @@ const CONST = {
 };
 
 const ERROR = {
-  OUT_OF_ROOT: 'Out of root directory'
+  OUT_OF_ROOT: 'Out of root directory',
+  SERVER_NOT_STARTED: 'Server cannot be started\n',
+  NO_ROUTE: 'Request route not recognized: "${host}": "${module}"\n'
 }
 
 const MIME = {
@@ -82,8 +124,12 @@ const RE = {
 }
 
 function getHost (request) {
-  const host = request.headers.host;
-  return host.substr(0, host.indexOf(CONST.COLON));
+  let host = request.headers.host;
+  const colonPos = host.indexOf(CONST.COLON);
+  if (host && colonPos > -1) {
+    host = host.substr(0, colonPos);
+  }
+  return host;
 }
 
 function parseUrlParams (urlParams) {
@@ -150,6 +196,24 @@ Request.prototype.getUrlParams = function () {
   return this.urlParams;
 }
 
+Request.prototype.getPath = function () {
+  if (!this.path) {
+    const splitted = this.request.url.split(CONST.QUESTION);
+    this.path = splitted[0];
+    this.params = splitted[1];
+  }
+  return this.path;
+}
+
+Request.prototype.getParams = function () {
+  if (!this.params) {
+    this.getPath();
+  } else if (!(this.params instanceof Object)) {
+    this.params = parseUrlParams(this.params);
+  }
+  return this.params;
+}
+
 function getFile (root, filePath, extension, callback, request) {
   const path = root + filePath;
 
@@ -193,6 +257,15 @@ Request.prototype.template = function (props) {
     props.viewport.initialScale && (
       VPParams += (VPParams ? CONST.COMMA : CONST.EMPTY) + 'initial-scale=' + props.viewport.initialScale
     );
+    props.viewport.minimumScale && (
+      VPParams += (VPParams ? CONST.COMMA : CONST.EMPTY) + 'minimum-scale=' + props.viewport.minimumScale
+    );
+    props.viewport.maximumScale && (
+      VPParams += (VPParams ? CONST.COMMA : CONST.EMPTY) + 'maximum-scale=' + props.viewport.maximumScale
+    );
+    (props.viewport.scalable !== undefined) && (
+      VPParams += (VPParams ? CONST.COMMA : CONST.EMPTY) + 'user-scalable=' + (props.viewport.scalable ? 'yes' : 'no')
+    );
     params.metas += templates.make(templates.meta, {name: 'viewport', content: VPParams});
   }
   for (let index in props.scripts) {
@@ -217,8 +290,12 @@ Request.prototype.getCookies = function () {
   return this.cookies;
 }
 
-Request.prototype.match = function (regExp) {
-  return regExp.exec(this.request.url);
+Request.prototype.match = function (regExp, callback) {
+  const regMatch = regExp.exec(this.getPath());
+  if (regMatch && callback) {
+    callback.call(this, regMatch);
+  }
+  return regMatch;
 }
 
 Request.prototype.getCookie = function (name) {
@@ -254,16 +331,30 @@ Request.prototype.send = function (data, ext) {
   this.response.end(data || CONST.EMPTY);
 };
 
+Request.prototype.route = function (router) {
+  const route = router[this.getPath()] || router.default;
+  route && route.call(this, this);
+}
+
 function mainProc (request, response) {
-  const callback = config.routes[getHost(request)] || config.routes.default;
+  const host = getHost(request);
+  const route = config.routes[host] || config.routes.default;
   try {
-    callback && callback(new Request(request, response));
-  } catch (e) {
+    require(route)(new Request(request, response));
+  } catch (error) {
     console.log(Date().toString());
-    console.log(e);
+    console.log(templates.make(ERROR.NO_ROUTE, {host: host, module: route }), error);
   }
 }
 
-http.createServer(mainProc).on(CONST.UPGRADE, mainProc).listen(port, host, function () {
+function errorListener (error) {
+  console.log(ERROR.SERVER_NOT_STARTED, error.stack);
+}
+
+config.title && (process.title = config.title);
+http.createServer(mainProc)
+  .on(CONST.UPGRADE, mainProc)
+  .on(CONST.ERROR, errorListener)
+  .listen(port, host, function () {
   console.log(templates.make(templates.serverStarted, {date: Date().toString(), host: host, port: port}));
 });

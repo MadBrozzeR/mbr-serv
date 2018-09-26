@@ -12,12 +12,15 @@ const defaultConfig = {
 
 function getConfig () {
   let config;
+  const configPath = __dirname + '/config.json';
+
   try {
-    config = JSON.parse(fs.readFileSync('./config.json'));
+    config = JSON.parse(fs.readFileSync(configPath));
   } catch (e) {
     config = defaultConfig;
-    fs.writeFileSync('./config.json', JSON.stringify(defaultConfig, null, 2));
+    fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2));
   }
+
   return config;
 }
 

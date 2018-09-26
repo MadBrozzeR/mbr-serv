@@ -81,6 +81,8 @@ const CONST = {
   END: 'end',
   EQUATION: '=',
   ERROR: 'error',
+  FAVICON: '/favicon.ico',
+  INDEX: 'index.html',
   QUESTION: '?',
   SET_COOKIE: 'Set-Cookie',
   SLASH: '/',
@@ -214,6 +216,20 @@ Request.prototype.getParams = function () {
   return this.params;
 }
 
+function getPathData (path) {
+    const slashPos = path.lastIndexOf(CONST.SLASH) + 1;
+    const directory = path.substring(0, slashPos);
+    const file = path.substring(slashPos);
+    const dotPos = file.lastIndexOf(CONST.DOT);
+    const extension = (dotPos < 0) ? null : file.substring(dotPos + 1);
+
+    return {
+        directory: directory,
+        file: file,
+        extension: extension
+    };
+}
+
 function getFile (root, filePath, extension, callback, request) {
   const path = root + filePath;
 
@@ -336,11 +352,43 @@ Request.prototype.route = function (router) {
   route && route.call(this, this);
 }
 
+function returnFileData (mime, data) {
+    if (!mime) {
+        if (this.path !== CONST.FAVICON) {
+            this.status = 404;
+            this.send(CONST.EMPTY, 'html');
+            console.log(data);
+        } else {
+            this.status = 200;
+            this.send();
+        }
+    } else {
+        this.status = 200;
+        this.headers[CONST.CONTENT_TYPE] = mime;
+        this.send(data);
+    }
+}
+
+Request.prototype.simpleServer = function (options) {
+    if (!options) {
+        return;
+    }
+
+    const root = options.root;
+    this.getPath();
+    const path = this.path === CONST.SLASH ? CONST.INDEX : this.path;
+    const extension = getPathData(path).extension;
+    getFile(root, path, extension, returnFileData, this);
+
+    const index = options.index || CONST.INDEX;
+}
+
 function mainProc (request, response) {
   const host = getHost(request);
   const route = config.routes[host] || config.routes.default;
   try {
-    require(route)(new Request(request, response));
+    const req = new Request(request, response);
+    require(route).call(req, req);
   } catch (error) {
     console.log(Date().toString());
     console.log(templates.make(ERROR.NO_ROUTE, {host: host, module: route }), error);

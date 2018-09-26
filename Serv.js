@@ -140,11 +140,16 @@ function concatPath (root, path) {
 
 function getHost (request) {
   let host = request.headers.host;
-  const colonPos = host.indexOf(CONST.COLON);
-  if (host && colonPos > -1) {
-    host = host.substr(0, colonPos);
+  if (host) {
+    const colonPos = host.indexOf(CONST.COLON);
+    if (host && colonPos > -1) {
+      host = host.substr(0, colonPos);
+    }
+    return host;
+  } else {
+    // TODO Remove case when undefined host mistery has been revieled. 
+    console.log('host is undefined. Request:', JSON.stringify(request, null, 2));
   }
-  return host;
 }
 
 function parseUrlParams (urlParams) {
@@ -181,6 +186,8 @@ function parseUrlParams (urlParams) {
 function Request (request, response) {
   this.request = request;
   this.response = response;
+  this.ip = request.socket.remoteAddress;
+  this.port = request.socket.remotePort;
   this.headers = {};
   this.status = 200;
   this.root = CONST.EMPTY;

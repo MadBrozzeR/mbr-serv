@@ -7,7 +7,9 @@ const defaultConfig = {
   port: 80,
   host: '0.0.0.0',
   title: 'mbr-serv',
-  routes: {}
+  routes: {
+    'localhost': './test.js'
+  }
 };
 
 function getConfig () {
@@ -126,6 +128,14 @@ const MIME = {
 const RE = {
   URL: /^(.*\/)(.+?)?(?:\.(\w+))?(?:\?(.+))?$/,
   COOKIE: /([^=]+)=(.+?)(?:; |$)/g
+}
+
+function concatPath (root, path) {
+  if (path[0] === CONST.SLASH) {
+    return path;
+  } else {
+    return root + CONST.SLASH + path;
+  }
 }
 
 function getHost (request) {
@@ -388,7 +398,7 @@ Request.prototype.simpleServer = function (options) {
 
 function mainProc (request, response) {
   const host = getHost(request);
-  const route = config.routes[host] || config.routes.default;
+  const route = concatPath(__dirname, config.routes[host] || config.routes.default);
   try {
     const req = new Request(request, response);
     require(route).call(req, req);

@@ -395,19 +395,20 @@ Request.prototype.simpleServer = function (options) {
     }
 
     const root = options.root;
+    const index = options.index || CONST.INDEX;
     this.getPath();
-    const path = this.path === CONST.SLASH ? CONST.INDEX : this.path;
+    const path = this.path === CONST.SLASH ? index : this.path;
     const extension = getPathData(path).extension;
     getFile(root, path, extension, returnFileData, this);
-
-    const index = options.index || CONST.INDEX;
 }
 
 function mainProc (request, response) {
-  const host = getHost(request);
-  const route = concatPath(__dirname, config.routes[host] || config.routes.default);
   try {
+    const host = getHost(request);
+    const route = concatPath(__dirname, config.routes[host] || config.routes.default);
     const req = new Request(request, response);
+    req.host = host;
+    req.module = route;
     require(route).call(req, req);
   } catch (error) {
     console.log(Date().toString());

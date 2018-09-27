@@ -97,7 +97,8 @@ const CONST = {
 const ERROR = {
   OUT_OF_ROOT: 'Out of root directory',
   SERVER_NOT_STARTED: 'Server cannot be started\n',
-  NO_ROUTE: 'Request route not recognized: "${host}": "${module}"\n'
+  NO_ROUTE: 'Request route not recognized: "${host}": "${module}"\n',
+  UNKNOWN_HOST: 'Non-existent host requested: ${host}'
 }
 
 const MIME = {
@@ -403,16 +404,23 @@ Request.prototype.simpleServer = function (options) {
 }
 
 function mainProc (request, response) {
-  try {
-    const host = getHost(request);
-    const route = concatPath(__dirname, config.routes[host] || config.routes.default);
-    const req = new Request(request, response);
-    req.host = host;
-    req.module = route;
-    require(route).call(req, req);
-  } catch (error) {
-    console.log(Date().toString());
-    console.log(templates.make(ERROR.NO_ROUTE, {host: host, module: route }), error);
+  const host = getHost(request);
+  const route = config.routes[host] || config.routes.default;
+  if (route) {
+    try {
+      const callback = require(concatPath(__dirname, route));
+      const req = new Request(request, response);
+      req.host = host;
+      req.module = route;
+      callback.call(req, req);
+    } catch (error) {
+      console.log(Date().toString());
+      console.log(templates.make(ERROR.NO_ROUTE, {host: host, module: route }), error);
+    }
+  } else {
+    console.log(templates.make(ERROR.UNKNOWN_HOST, {host: host}));
+    response.writeHead(404);
+    response.end();
   }
 }
 

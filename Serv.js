@@ -192,6 +192,30 @@ function Request (request, response) {
   this.headers = {};
   this.status = 200;
   this.root = CONST.EMPTY;
+  this.host = null;
+  this.module = null;
+}
+
+Request.prototype.valueOf = Request.prototype.toJSON = function () {
+    return {
+        request: {
+            url: this.request.url,
+            method: this.request.url,
+            httpVersion: this.request.httpVersion,
+            headers: this.request.headers,
+            statusCode: this.request.statusCode,
+            statusMessage: this.request.statusMessage,
+            trailers: this.request.trailers,
+            upgrade: this.request.upgrade
+        },
+        ip: this.ip,
+        port: this.port,
+        headers: this.headers,
+        status: this.status,
+        root: this.root,
+        host: this.host,
+        module: this.module
+    }
 }
 
 Request.prototype.getData = function (callback) {

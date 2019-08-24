@@ -115,6 +115,7 @@ const MIME = {
   htm: 'text/html',
   html: 'text/html',
   plain: 'text/plain',
+  txt: 'text/plain',
   // image
   bmp: 'image/bmp',
   gif: 'image/gif',
@@ -147,9 +148,6 @@ function getHost (request) {
       host = host.substr(0, colonPos);
     }
     return host;
-  } else {
-    // TODO Remove case when undefined host mistery has been revieled. 
-    console.log('host is undefined. Request:', JSON.stringify(request, null, 2));
   }
 }
 
@@ -394,7 +392,7 @@ Request.prototype.send = function (data, ext) {
 
 Request.prototype.route = function (router) {
   const route = router[this.getPath()] || router.default;
-  route && route.call(this, this);
+  return route && route.call(this, this);
 }
 
 function returnFileData (mime, data) {
@@ -423,8 +421,13 @@ Request.prototype.simpleServer = function (options) {
     const index = options.index || CONST.INDEX;
     this.getPath();
     const path = this.path === CONST.SLASH ? index : this.path;
-    const extension = getPathData(path).extension;
-    getFile(root, path, extension, returnFileData, this);
+    if (options.prepare) {
+      options.prepare.call(this);
+    }
+    if (!(options.router && this.route(options.router))) {
+      const extension = getPathData(path).extension;
+      getFile(root, path, extension, returnFileData, this);
+    }
 }
 
 function mainProc (request, response) {

@@ -175,17 +175,31 @@ Request.prototype.delCookie = function (name) {
   this.setCookie(name, CONST.EMPTY, {expires: expires});
 }
 
-Request.prototype.send = function (data, ext) {
+Request.prototype.send = function (data = '', ext) {
   if (ext) {
     this.headers[CONST.CONTENT_TYPE] = MIME[ext] || MIME.octet;
   }
+  this.headers[CONST.CONTENT_LENGTH] = Buffer.byteLength(data);
   this.response.writeHead(this.status, this.headers);
   this.response.end(data || CONST.EMPTY);
 };
 
 Request.prototype.route = function (router) {
   const route = router[this.getPath()] || router.default;
-  route && route.call(this, this);
+
+  if (route instanceof Function) {
+    route.call(this, this);
+  } else if (typeof route === CONST.STRING) {
+    utils.sendFile.call(this, route);
+  } else {
+    if (route[this.request.method] instanceof Function) {
+      route[this.request.method].call(this, this);
+    } else {
+      this.status = 405;
+      this.headers.Allow = Object.keys(route).join(', ');
+      this.send();
+    }
+  }
 }
 
 Request.prototype.simpleServer = function (options) {

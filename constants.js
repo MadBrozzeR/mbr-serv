@@ -4,6 +4,7 @@ module.exports = {
     COLON: ':',
     COMMA: ',',
     CONTENT_TYPE: 'Content-Type',
+    CONTENT_LENGTH: 'Content-Length',
     COOKIE: 'cookie',
     DATA: 'data',
     DOT: '.',
@@ -15,6 +16,7 @@ module.exports = {
     INDEX: 'index.html',
     QUESTION: '?',
     SET_COOKIE: 'Set-Cookie',
+    STRING: 'string',
     SLASH: '/',
     UPGRADE: 'upgrade'
   },
@@ -39,6 +41,7 @@ module.exports = {
     css: 'text/css',
     htm: 'text/html',
     html: 'text/html',
+    txt: 'text/plain',
     plain: 'text/plain',
     // image
     bmp: 'image/bmp',

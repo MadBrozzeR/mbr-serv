@@ -93,6 +93,27 @@ module.exports.getPathData = function getPathData (path) {
     };
 };
 
+function getFileUnsafe (file, callback) {
+  const request = this;
+  fs.readFile(file, function (error, data) {
+    callback && callback.call(request, error, data);
+  });
+};
+
+module.exports.sendFile = function (file) {
+  const request = this;
+
+  getFileUnsafe.call(request, file, function (error, data) {
+    if (error) {
+      request.status = 404;
+      request.send();
+    } else {
+      const url = request.getUrlParams();
+      request.send(data, url.extension);
+    }
+  });
+}
+
 module.exports.getFile = function getFile (root, filePath, extension, callback, request) {
   const path = root + filePath;
 

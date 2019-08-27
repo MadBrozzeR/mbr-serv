@@ -224,8 +224,8 @@ Request.prototype.simpleServer = function (options) {
       options.prepare.call(this);
     }
     if (!(options.router && this.route(options.router))) {
-      const extension = getPathData(path).extension;
-      getFile(root, path, extension, returnFileData, this);
+      const extension = utils.getPathData(path).extension;
+      utils.getFile(root, path, extension, utils.returnFileData, this);
     }
 }
 

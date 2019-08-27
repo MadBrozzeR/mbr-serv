@@ -1,5 +1,6 @@
 const fs = require('fs');
 const CONST = require('./constants.js').CONST;
+const MIME = require('./constants.js').MIME;
 
 templates = {
   reg: /\$\{(\w+)\}/g,
@@ -44,7 +45,7 @@ module.exports.getHost = function getHost (request) {
     return host;
   } else {
     // TODO Remove case when undefined host mistery has been revieled. 
-    console.log('host is undefined. Request:', JSON.stringify(request, null, 2));
+    console.log('host is undefined. Request headers:', JSON.stringify(request.headers, null, 2));
   }
 };
 

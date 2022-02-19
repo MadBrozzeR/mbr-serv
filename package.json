@@ -1,0 +1,23 @@
+{
+  "name": "mbr-serv",
+  "version": "0.1.0",
+  "description": "One more server implementation",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MadBrozzeR/mbr-serv.git"
+  },
+  "keywords": [
+    "http",
+    "server"
+  ],
+  "author": "MadBrozzeR",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MadBrozzeR/mbr-serv/issues"
+  },
+  "homepage": "https://github.com/MadBrozzeR/mbr-serv#readme"
+}

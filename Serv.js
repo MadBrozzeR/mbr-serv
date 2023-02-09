@@ -1,45 +1,23 @@
 const http = require('http');
-const fs = require('fs');
 const utils = require('./utils.js');
-const constants = require('./constants.js');
+const { ERROR, CONST } = require('./constants.js');
 const Request = require('./request.js');
-
-const ERROR = constants.ERROR;
-const CONST = constants.CONST;
+const net = require('net');
+const { adminListener } = require('./admin.js');
+const { Controller } = require('./controller.js');
 
 const templates = utils.templates;
 
-const defaultConfig = {
-  port: 80,
-  host: '0.0.0.0',
-  title: 'mbr-serv',
-  routes: {
-    'localhost': './test.js'
-  }
-};
+const controller = new Controller({
+  configPath: __dirname + '/config.json',
+});
 
-function getConfig () {
-  let config;
-  const configPath = __dirname + '/config.json';
-
-  try {
-    config = JSON.parse(fs.readFileSync(configPath));
-  } catch (e) {
-    config = defaultConfig;
-    fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2));
-  }
-
-  return config;
-}
-
-const config = getConfig();
-
-const port = config.port || 8080;
-const host = config.host || '0.0.0.0';
+const port = controller.config.port || 8080;
+const host = controller.config.host || '0.0.0.0';
 
 function mainProc (request, response) {
   const host = utils.getHost(request);
-  const route = config.routes[host] || config.routes.default;
+  const route = controller.config.routes[host] || controller.config.routes.default;
   if (route) {
     try {
       const callback = require(utils.concatPath(__dirname, route));
@@ -62,10 +40,15 @@ function errorListener (error) {
   console.log(ERROR.SERVER_NOT_STARTED, error.stack);
 }
 
-config.title && (process.title = config.title);
+controller.setTitle();
+
 http.createServer(mainProc)
   .on(CONST.UPGRADE, mainProc)
   .on(CONST.ERROR, errorListener)
   .listen(port, host, function () {
   console.log(templates.make(templates.serverStarted, {date: Date().toString(), host: host, port: port}));
 });
+
+if (controller.config.admin && controller.config.admin.port) {
+  net.createServer(adminListener(controller)).listen(controller.config.admin.port);
+}

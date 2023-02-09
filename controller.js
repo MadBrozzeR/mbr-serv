@@ -5,6 +5,7 @@ const DEFAULT_CONFIG = {
   port: 80,
   host: '0.0.0.0',
   title: 'mbr-serv',
+  preventCrash: false,
   routes: {
     'localhost': './test.js'
   },

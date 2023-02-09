@@ -24,7 +24,7 @@ module.exports = {
   ERROR: {
     OUT_OF_ROOT: 'Out of root directory',
     SERVER_NOT_STARTED: 'Server cannot be started\n',
-    NO_ROUTE: 'Request route not recognized: "${host}": "${module}"\n',
+    MODULE_ERROR: 'Error in module: "${host}": "${module}"\n',
     UNKNOWN_HOST: 'Non-existent host requested: ${host}'
   },
 

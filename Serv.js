@@ -28,7 +28,7 @@ function mainProc (request, response) {
       callback.call(req, req);
     } catch (error) {
       console.log(Date().toString());
-      console.log(templates.make(ERROR.NO_ROUTE, {host: host, module: route }), error);
+      console.log(templates.make(ERROR.MODULE_ERROR, { host: host, module: route }), error);
     }
   } else {
     console.log(templates.make(ERROR.UNKNOWN_HOST, {host: host}));
@@ -53,3 +53,22 @@ http.createServer(mainProc)
 if (controller.config.admin && controller.config.admin.port) {
   net.createServer(adminListener(controller)).listen(controller.config.admin.port);
 }
+
+process
+  .on('uncaughtException', function (error) {
+    if (controller.config.preventCrash) {
+      console.log('uncaught ecxeption handled:', error);
+    } else {
+      throw error;
+    }
+  })
+  .on('unhandledRejection', function (error) {
+    if (controller.config.preventCrash) {
+      console.log('unhandled rejection caught:', error);
+    } else {
+      // I doubt it's proper way skip rejection handling,
+      // but in case of Promise.reject(error) we have
+      // an infinite loop in this handler
+      throw error;
+    }
+  });

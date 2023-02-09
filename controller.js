@@ -1,4 +1,5 @@
 const fs = require('fs');
+const utils = require('./utils.js');
 
 const DEFAULT_CONFIG = {
   port: 80,
@@ -10,7 +11,8 @@ const DEFAULT_CONFIG = {
   admin: null
 };
 
-function Controller({ configPath } = {}) {
+function Controller({ configPath, root } = {}) {
+  this.root = root || __dirname;
   this.config = DEFAULT_CONFIG;
   this.configPath = configPath;
 
@@ -37,6 +39,22 @@ Controller.prototype.setTitle = function (title) {
   if (newTitle) {
     process.title = newTitle;
   }
+}
+
+Controller.prototype.getRoute = function (host) {
+  return this.config.routes[host] || this.config.routes.default;
+}
+
+Controller.prototype.require = function (host) {
+  const route = this.getRoute(host);
+
+  return require(utils.concatPath(this.root, route));
+}
+
+Controller.prototype.uncacheRoute = function (host) {
+  const route = this.getRoute(host);
+
+  delete require.cache[require.resolve(route)];
 }
 
 module.exports = { Controller };

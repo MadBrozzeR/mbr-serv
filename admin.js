@@ -12,16 +12,18 @@ function getCommand (data) {
 }
 
 const HELP = {
-  list: ['List all routes'],
+  list: ['List all routes as "[host]: [route]"'],
   reconfig: ['Reload server config'],
   quit: ['Close admin session'],
-  null: ['Command list:', 'help, list, reconfig, quit'],
+  reroute: ['Reload route file by host (clear cache)', 'Usage:', 'reroute [host]'],
+  null: ['Command list:', 'help, list, reconfig, quit, reroute'],
 };
 
 const TEXT = {
   HELLO: 'What do you need, My Master?\n',
   BYE: 'It\'s being pleasure to serve you, My Master!\n',
-  DONE: 'Your wish is fulfilled, My Master!\n',
+  DONE: 'Your wish is fulfilled!\n',
+  NO_ROUTE_FOUND: 'I don\'t know this hostname.\n',
 }
 
 const Admin = {
@@ -45,6 +47,14 @@ const Admin = {
   reconfig: function (controller, _parameters, socket) {
     controller.loadConfig();
     socket.write(TEXT.DONE);
+  },
+  reroute: function (controller, parameters, socket) {
+    if (parameters in controller.config.routes) {
+      controller.uncacheRoute(parameters);
+      socket.write(TEXT.DONE);
+    } else {
+      socket.write(TEXT.NO_ROUTE_FOUND);
+    }
   }
 }
 

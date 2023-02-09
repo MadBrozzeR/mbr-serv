@@ -9,6 +9,7 @@ const { Controller } = require('./controller.js');
 const templates = utils.templates;
 
 const controller = new Controller({
+  root: __dirname,
   configPath: __dirname + '/config.json',
 });
 
@@ -17,10 +18,10 @@ const host = controller.config.host || '0.0.0.0';
 
 function mainProc (request, response) {
   const host = utils.getHost(request);
-  const route = controller.config.routes[host] || controller.config.routes.default;
+  const route = controller.getRoute(host);
   if (route) {
     try {
-      const callback = require(utils.concatPath(__dirname, route));
+      const callback = controller.require(host);
       const req = new Request(request, response);
       req.host = host;
       req.module = route;

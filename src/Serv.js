@@ -18,29 +18,10 @@ const port = controller.config.port || 8080;
 const securePort = controller.config.security && controller.config.security.port || 8443;
 const host = controller.config.host || '0.0.0.0';
 
-function redirect (request, response, isSecure, host) {
-  const path = (isSecure ? 'http' : 'https')
-    + '://'
-    + host
-    + ':' + (isSecure ? port : securePort)
-    + request.url;
-
-  response.writeHead(301, {
-    Location: path
-  });
-  response.end();
-}
-
 function mainProc (isSecure) {
   return function (request, response) {
     const host = utils.getHost(request);
     const route = controller.getRoute(host, isSecure);
-
-    if (!route && controller.getRoute(host, !isSecure)) {
-      redirect(request, response, isSecure, host);
-
-      return;
-    }
 
     if (route) {
       try {

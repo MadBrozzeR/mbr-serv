@@ -36,9 +36,15 @@ Controller.prototype.loadConfig = function (configPath) {
   const path = configPath || this.configPath;
   try {
     this.config = JSON.parse(fs.readFileSync(path));
-  } catch (e) {
-    this.config = DEFAULT_CONFIG;
-    fs.writeFileSync(path, JSON.stringify(this.config, null, 2));
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      // JSON parsing error
+      console.log('Config is broken! No changes applied.');
+    } else {
+      // File not found
+      this.config = DEFAULT_CONFIG;
+      fs.writeFileSync(path, JSON.stringify(this.config, null, 2));
+    }
   }
 
   this.setTitle();

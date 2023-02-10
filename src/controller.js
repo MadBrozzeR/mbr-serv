@@ -26,6 +26,10 @@ function Controller({ configPath, root } = {}) {
   this.root = root || __dirname;
   this.config = DEFAULT_CONFIG;
   this.configPath = configPath;
+  this.servers = {
+    http: null,
+    https: null,
+  };
 
   if (configPath) {
     this.loadConfig();
@@ -95,6 +99,20 @@ Controller.prototype.getSequrityOptions = function () {
   }
 
   return null;
+}
+
+Controller.prototype.updateSecurityOptions = function () {
+  if (this.servers.https) {
+    const options = this.getSequrityOptions();
+
+    if (options) {
+      this.servers.https.setSecureContext(options);
+
+      return true;
+    }
+  }
+
+  return false;
 }
 
 module.exports = { Controller };

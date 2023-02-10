@@ -18,7 +18,8 @@ const HELP = {
   quit: ['Close admin session'],
   reroute: ['Reload HTTP route file by host (clear cache)', 'Usage:', 'reroute [host]'],
   sreroute: ['Reload HTTPS route file by host (clear cache)', 'Usage:', 'sreroute [host]'],
-  null: ['Command list:', 'help, list, slist, reconfig, quit, reroute, sreroute'],
+  ressl: ['Reload HTTPS secure context (key and cert) from current config'],
+  null: ['Command list:', 'help, list, slist, reconfig, quit, reroute, sreroute, ressl'],
 };
 
 const TEXT = {
@@ -26,6 +27,8 @@ const TEXT = {
   BYE: 'It\'s being pleasure to serve you, My Master!\n',
   DONE: 'Your wish is fulfilled!\n',
   NO_ROUTE_FOUND: 'I don\'t know this hostname.\n',
+  FAILED: 'I couldn\'t accomplish your task, My Master\n',
+  UNRECOGNIZED: 'I\'m sorry, My Master, I don\'t understand your task...\n'
 }
 
 const Admin = {
@@ -72,6 +75,13 @@ const Admin = {
     } else {
       socket.write(TEXT.NO_ROUTE_FOUND);
     }
+  },
+  ressl: function (controller, _parameters, socket) {
+    if (controller.updateSecurityOptions()) {
+      socket.write(TEXT.DONE);
+    } else {
+      socket.write(TEXT.FAILED);
+    }
   }
 }
 
@@ -84,6 +94,8 @@ module.exports.adminListener = function adminListener(controller) {
 
       if (input.command in Admin) {
         Admin[input.command](controller, input.parameters, socket);
+      } else {
+        socket.write(TEXT.UNRECOGNIZED);
       }
     });
   }

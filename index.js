@@ -1,3 +1,3 @@
 module.exports = {
-  Request: require('./request')
+  Request: require('./src/request.js')
 };

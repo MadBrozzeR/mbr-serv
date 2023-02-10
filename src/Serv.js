@@ -18,6 +18,29 @@ const port = controller.config.port || 8080;
 const securePort = controller.config.security && controller.config.security.port || 8443;
 const host = controller.config.host || '0.0.0.0';
 
+function errorListener (error) {
+  console.log(ERROR.SERVER_NOT_STARTED, error.stack);
+}
+
+function reportServerStart (port, host) {
+  console.log(templates.make(templates.serverStarted, {date: Date().toString(), host: host, port: port}));
+}
+
+function createServer (isSecure) {
+  const proc = mainProc(isSecure);
+  const server = isSecure
+    ? https.createServer(controller.getSequrityOptions(), proc)
+    : http.createServer(proc);
+  const serverPort = isSecure ? securePort : port;
+
+  return server
+    .on(CONST.UPGRADE, proc)
+    .on(CONST.ERROR, errorListener)
+    .listen(serverPort, host, function () {
+      reportServerStart(serverPort, host);
+    });
+}
+
 function mainProc (isSecure) {
   return function (request, response) {
     const host = utils.getHost(request);
@@ -42,31 +65,9 @@ function mainProc (isSecure) {
   }
 }
 
-function errorListener (error) {
-  console.log(ERROR.SERVER_NOT_STARTED, error.stack);
-}
-
-function reportServerStart (port, host) {
-  console.log(templates.make(templates.serverStarted, {date: Date().toString(), host: host, port: port}));
-}
-
 const proc = mainProc(false);
-http.createServer(proc)
-  .on(CONST.UPGRADE, proc)
-  .on(CONST.ERROR, errorListener)
-  .listen(port, host, function () {
-    reportServerStart(port, host);
-  });
-if (controller.isSecureEnabled()) {
-  const options = controller.getSequrityOptions();
-  const proc = mainProc(true);
-  https.createServer(options, proc)
-    .on(CONST.UPGRADE, proc)
-    .on(CONST.ERROR, errorListener)
-    .listen(securePort, host, function () {
-      reportServerStart(securePort, host);
-    });
-}
+controller.servers.http = createServer(false);
+controller.servers.https = createServer(true);
 
 if (controller.config.admin && controller.config.admin.port) {
   net.createServer(adminListener(controller)).listen(controller.config.admin.port);

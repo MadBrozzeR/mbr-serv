@@ -1,2 +1,2 @@
 #!/bin/sh
-node Serv.js
+node src/Serv.js

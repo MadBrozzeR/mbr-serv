@@ -19,7 +19,8 @@ const DEFAULT_CONFIG = {
     routes: {
       'localhost': './test.js'
     }
-  }
+  },
+  persistent: []
 };
 
 function Controller({ configPath, root } = {}) {

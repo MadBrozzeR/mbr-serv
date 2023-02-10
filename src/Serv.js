@@ -73,6 +73,20 @@ if (controller.config.admin && controller.config.admin.port) {
   net.createServer(adminListener(controller)).listen(controller.config.admin.port);
 }
 
+if (
+  controller.config.persistent instanceof Array
+  && controller.config.persistent.length
+) {
+  const { persistent } = controller.config;
+
+  for (let index = 0 ; index < persistent.length ; ++index) {
+    const path = utils.concatPath(controller.root, persistent[index]);
+    if (require.resolve(path)) {
+      require(path);
+    }
+  }
+}
+
 process
   .on('uncaughtException', function (error) {
     if (controller.config.preventCrash) {

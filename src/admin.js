@@ -12,11 +12,13 @@ function getCommand (data) {
 }
 
 const HELP = {
-  list: ['List all routes as "[host]: [route]"'],
+  list: ['List all HTTP routes as "[host]: [route]"'],
+  slist: ['List all HTTPS routes as "[host]: [route]"'],
   reconfig: ['Reload server config'],
   quit: ['Close admin session'],
-  reroute: ['Reload route file by host (clear cache)', 'Usage:', 'reroute [host]'],
-  null: ['Command list:', 'help, list, reconfig, quit, reroute'],
+  reroute: ['Reload HTTP route file by host (clear cache)', 'Usage:', 'reroute [host]'],
+  sreroute: ['Reload HTTPS route file by host (clear cache)', 'Usage:', 'sreroute [host]'],
+  null: ['Command list:', 'help, list, slist, reconfig, quit, reroute, sreroute'],
 };
 
 const TEXT = {
@@ -44,6 +46,13 @@ const Admin = {
       socket.write(route + ': ' + routes[route] + '\n');
     }
   },
+  slist: function (controller, _parameters, socket) {
+    const { routes } = controller.config.security;
+
+    for (const route in routes) {
+      socket.write(route + ': ' + routes[route] + '\n');
+    }
+  },
   reconfig: function (controller, _parameters, socket) {
     controller.loadConfig();
     socket.write(TEXT.DONE);
@@ -51,6 +60,14 @@ const Admin = {
   reroute: function (controller, parameters, socket) {
     if (parameters in controller.config.routes) {
       controller.uncacheRoute(parameters);
+      socket.write(TEXT.DONE);
+    } else {
+      socket.write(TEXT.NO_ROUTE_FOUND);
+    }
+  },
+  sreroute: function (controller, parameters, socket) {
+    if (parameters in controller.config.security.routes) {
+      controller.uncacheRoute(parameters, true);
       socket.write(TEXT.DONE);
     } else {
       socket.write(TEXT.NO_ROUTE_FOUND);

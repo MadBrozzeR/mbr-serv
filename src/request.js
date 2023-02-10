@@ -1,9 +1,6 @@
-const constants = require('./constants.js');
+const { CONST, RE, MIME } = require('./constants.js');
 const utils = require('./utils.js');
 
-const CONST = constants.CONST;
-const RE = constants.RE;
-const MIME = constants.MIME;
 const templates = utils.templates;
 
 const empty = {};
@@ -245,5 +242,27 @@ Request.prototype.proxy = function (props = empty) {
     }), {end: true}
   );
 }
+
+Request.prototype.getHost = function getHost () {
+  let host = this.request.headers.host;
+
+  if (host) {
+    const colonPos = host.indexOf(CONST.COLON);
+
+    if (host && colonPos > -1) {
+      host = host.substr(0, colonPos);
+    }
+
+    return host;
+  } else {
+    return undefined;
+  }
+};
+
+Request.prototype.redirect = function (path, status = 307) {
+  this.status = status;
+  this.headers.Location = path;
+  this.send();
+};
 
 module.exports = Request;

@@ -151,3 +151,23 @@ module.exports.returnFileData = function returnFileData (mime, data) {
         this.send(data);
     }
 };
+
+function uncache(moduleName, recoursive, callback) {
+  const resolved = require.resolve(moduleName);
+  const cache = require.cache[resolved];
+
+  if (!cache) {
+    return;
+  }
+
+  if (recoursive) {
+    for (let index = 0 ; index < cache.children.length ; ++index) {
+      uncache(cache.children[index].id, recoursive, callback);
+    }
+  }
+
+  callback && callback(resolved);
+  delete require.cache[resolved];
+}
+
+module.exports.uncache = uncache;

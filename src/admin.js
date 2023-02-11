@@ -1,3 +1,5 @@
+const utils = require('./utils.js');
+
 function getCommand (data) {
   const text = data.toString().trim();
   const spacePosition = text.indexOf(' ');
@@ -19,7 +21,8 @@ const HELP = {
   reroute: ['Reload HTTP route file by host (clear cache)', 'Usage:', 'reroute [host]'],
   sreroute: ['Reload HTTPS route file by host (clear cache)', 'Usage:', 'sreroute [host]'],
   ressl: ['Reload HTTPS secure context (key and cert) from current config'],
-  null: ['Command list:', 'help, list, slist, reconfig, quit, reroute, sreroute, ressl'],
+  uncache: ['Recursively clear module cache', 'Usage:', 'uncache [NodeJS module name]'],
+  null: ['Command list:', 'help, list, slist, reconfig, quit, reroute, sreroute, ressl, uncache'],
 };
 
 const TEXT = {
@@ -82,6 +85,12 @@ const Admin = {
     } else {
       socket.write(TEXT.FAILED);
     }
+  },
+  uncache: function (_controller, parameters, socket) {
+    utils.uncache(parameters, true, function (module) {
+      socket.write('Removing ' + module + '\n');
+    });
+    socket.write(TEXT.DONE);
   }
 }
 

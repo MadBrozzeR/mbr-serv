@@ -80,7 +80,7 @@ Controller.prototype.require = function (host, isSecure) {
 Controller.prototype.uncacheRoute = function (host, isSecure) {
   const route = this.getRoute(host, isSecure);
 
-  delete require.cache[require.resolve(route)];
+  utils.uncache(route);
 }
 
 Controller.prototype.isSecureEnabled = function () {

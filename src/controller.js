@@ -103,11 +103,17 @@ Controller.prototype.getSequrityOptions = function () {
 }
 
 Controller.prototype.updateSecurityOptions = function () {
-  if (this.servers.https) {
+  const server = this.servers.https;
+
+  if (server) {
     const options = this.getSequrityOptions();
 
     if (options) {
-      this.servers.https.setSecureContext(options);
+      if (server.setSecureContext instanceof Function) {
+        server.setSecureContext(options);
+      } else {
+        server.setOptions(options);
+      }
 
       return true;
     }

@@ -1,8 +1,8 @@
 const fs = require('fs');
-const CONST = require('./constants.js').CONST;
-const MIME = require('./constants.js').MIME;
+const path = require('path');
+const { CONST, MIME, ERROR } = require('./constants.js');
 
-templates = {
+const templates = {
   reg: /\$\{(\w+)\}/g,
   document: 
     '<!DOCTYPE ${doctype}>\n' +
@@ -116,23 +116,23 @@ module.exports.sendFile = function (file) {
 }
 
 module.exports.getFile = function getFile (root, filePath, extension, callback, request) {
-  const path = root + filePath;
+  if (filePath[0] === '/') {
+    filePath = filePath.substring(1);
+  }
+  const realRoot = path.resolve(root) + '/';
+  const realPath = path.resolve(realRoot, filePath);
 
-  fs.realpath(path, function (error, realPath) {
-    if (error) {
-      callback.call(request, null, error);
-    } else if (!root || realPath.substr(0, root.length) === root) {
-      fs.readFile(realPath, function (error, data) {
-        if (error) {
-          callback.call(request, null, error);
-        } else {
-          callback.call(request, MIME[extension] || MIME.octet, data);
-        }
-      });
-    } else {
-      callback.call(request, null, new Error(ERROR.OUT_OF_ROOT));
-    }
-  });
+  if (!root || realPath.substr(0, realRoot.length) === realRoot) {
+    fs.readFile(realPath, function (error, data) {
+      if (error) {
+        callback.call(request, null, error);
+      } else {
+        callback.call(request, MIME[extension] || MIME.octet, data);
+      }
+    });
+  } else {
+    callback.call(request, null, new Error(templates.make(ERROR.OUT_OF_ROOT, { path: filePath, root: realRoot })));
+  }
 };
 
 module.exports.returnFileData = function returnFileData (mime, data) {

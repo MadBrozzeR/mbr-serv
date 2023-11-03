@@ -22,7 +22,7 @@ module.exports = {
   },
 
   ERROR: {
-    OUT_OF_ROOT: 'Out of root directory',
+    OUT_OF_ROOT: 'Path "${path}" is out of root directory "${root}"',
     SERVER_NOT_STARTED: 'Server cannot be started\n',
     MODULE_ERROR: 'Error in module: "${host}": "${module}"\n',
     UNKNOWN_HOST: 'Non-existent host requested: ${host}'

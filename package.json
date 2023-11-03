@@ -1,10 +1,13 @@
 {
   "name": "mbr-serv",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "One more server implementation",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "mbr-dev-server": "./lib/dev-server.js"
   },
   "repository": {
     "type": "git",

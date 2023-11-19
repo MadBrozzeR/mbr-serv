@@ -1,5 +1,6 @@
 const { CONST, RE, MIME } = require('./constants.js');
 const utils = require('./utils.js');
+const { Url } = require('./url.js');
 
 const templates = utils.templates;
 
@@ -263,6 +264,10 @@ Request.prototype.redirect = function (path, status = 307) {
   this.status = status;
   this.headers.Location = path;
   this.send();
+};
+
+Request.prototype.getUrl = function (path) {
+  return new Url(path || this.request.url);
 };
 
 module.exports = Request;
